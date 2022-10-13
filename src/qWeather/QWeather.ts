@@ -1,8 +1,9 @@
 import axios from 'axios';
-import { AirNowResponse, AirNow, WeatherNow, WeatherNowResponse } from './types';
+import { AirNowResponse, WeatherNow, WeatherNowResponse, WeatherDailyResponse, WeatherDaily, AirNow } from './types';
 
 const CITY_LOOKUP_URL = 'https://geoapi.qweather.com/v2/city/lookup';
 const WEATHER_NOW_URL = 'https://devapi.qweather.com/v7/weather/now';
+const WEATHER_FORECAST_URL = 'https://devapi.qweather.com/v7/weather/3d';
 const AIR_NOW_URL = 'https://devapi.qweather.com/v7/air/now';
 
 class QWeather {
@@ -44,6 +45,23 @@ class QWeather {
     }
 
     return (data as WeatherNowResponse).now;
+  }
+
+  async getWeatherForecast(location: string): Promise<WeatherDaily> {
+    try {
+      const { data } = await axios({
+        method: 'get',
+        url: WEATHER_FORECAST_URL,
+        params: {
+          location: location,
+          key: this.apiKey,
+          lang: 'zh',
+        },
+      });
+      return (data as WeatherDailyResponse).daily[0];
+    } catch (err) {
+      throw err;
+    }
   }
 
   async getAirNow(location: string): Promise<AirNow> {

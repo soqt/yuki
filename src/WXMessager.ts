@@ -2,7 +2,9 @@ import axios from 'axios';
 import Redis from 'ioredis';
 
 const WX_ACCESS_TOKEN_URL = 'https://api.weixin.qq.com/cgi-bin/token';
-const WX_SEND_MESSAGE_URL = 'https://api.weixin.qq.com/cgi-bin/message/template/send?';
+const WX_SEND_MESSAGE_URL = 'https://api.weixin.qq.com/cgi-bin/message/template/send';
+
+
 
 class WXMessager {
   appId: string;
@@ -14,7 +16,6 @@ class WXMessager {
   data?: object;
 
   storage: Redis;
-
 
   constructor(appId: string, appSecret: string, storage: Redis) {
     this.appId = appId;
@@ -51,22 +52,13 @@ class WXMessager {
   }
 
   prepareMessage(message: any) {
-    const data = {
-      date: {
-        value: message.date,
-      },
-      temp: {
-        value: message.temp,
-      },
-    };
-    this.data = data;
+    this.data = message;
   }
 
-  async send(toUser: string, templateId: string) {
+  async send(toUser: string, templateId: string): Promise<string> {
     try {
       await this.getAddressToken();
       const url = `${WX_SEND_MESSAGE_URL}?access_token=${this.accessToken}`;
-      console.log(url);
 
       const { data } = await axios({
         method: 'POST',
@@ -82,11 +74,10 @@ class WXMessager {
       if (data.errcode) {
         throw new Error(data.errmsg);
       }
-      console.log(data);
+      return data.msgid;
     } catch (err) {
       throw err;
     }
-
   }
 }
 

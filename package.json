@@ -10,8 +10,10 @@
   "author": "",
   "dependencies": {
     "axios": "^1.1.2",
+    "dayjs": "^1.11.5",
     "dotenv": "^16.0.3",
     "ioredis": "^5.2.3",
+    "timezone": "link:dayjs/plugin/timezone",
     "typescript": "^4.8.4"
   },
   "devDependencies": {

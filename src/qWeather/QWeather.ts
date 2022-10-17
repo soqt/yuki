@@ -9,6 +9,8 @@ const AIR_NOW_URL = 'https://devapi.qweather.com/v7/air/now';
 class QWeather {
   apiKey: string;
 
+  aqiCategory?: string;
+
   constructor(apiKey: string) {
     this.apiKey = apiKey; 
   }
@@ -66,7 +68,7 @@ class QWeather {
 
   async getAirNow(location: string): Promise<AirNow> {
     try {
-      const res = await axios({
+      const { data } = await axios({
         method: 'get',
         url: AIR_NOW_URL,
         params: {
@@ -75,9 +77,29 @@ class QWeather {
           lang: 'zh',
         },
       });
-      return (res.data as AirNowResponse).now;
+      this.aqiCategory = data.aqiCategory;
+      return (data as AirNowResponse).now;
     } catch (e) {
       throw e;
+    }
+  }
+
+  getAqiSuggestion() {
+    switch (this.aqiCategory) {
+      case '优':
+        return '空气质量不错！快出去骑单车吧！';
+      case '良':
+        return '空气还阔以～可以出门陪小伙伴玩耍～';
+      case '轻度污染':
+        return '出门记得戴口罩防尘哦～';
+      case '中度污染':
+        return '要出去玩的话尽量选择室内吧';
+      case '重度污染':
+        return '不适合外出，尽量呆在家里吧！';
+      case '严重污染':
+        return '不适合外出，尽量呆在家里吧！';
+      default:
+        return '空气质量令人满意，基本无空气污染';
     }
   }
 }

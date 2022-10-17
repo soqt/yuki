@@ -1,9 +1,19 @@
 export interface Template1 {
-  date?: string;
-  aqi: string;
-  suggestion: string;
-  upperBody: string;
-  lowerBody: string;
-  shoes: string;
-  misc: string;
+  name: MessageOption
+  location: MessageOption,
+  temp: MessageOption,
+  date: MessageOption;
+  aqi: MessageOption;
+  suggestion: MessageOption;
+  upperBody: MessageOption;
+  lowerBody: MessageOption;
+  shoes: MessageOption;
+  misc: MessageOption;
+  constellationScore: MessageOption;
+  constellationSummary: MessageOption;
+}
+
+interface MessageOption {
+  value: string;
+  color?: string;
 }

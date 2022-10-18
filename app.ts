@@ -7,7 +7,7 @@ import cbw from './src/clothing';
 import type { Input } from './src/clothing';
 import WXMessager from './src/WXMessager';
 import QWeather from './src/qWeather/QWeather';
-import { Template1 } from './src/templates';
+import { MessageTemplateAirCondition } from './src/templates';
 import Juhe from './src/juhe/Juhe';
 dotenv.config();
 
@@ -33,7 +33,7 @@ const getWeatherInfo = async (location: string) => {
   const weatherForecastToday = await qWeather.getWeatherForecast(cityCode);
   const airSuggestion = qWeather.getAqiSuggestion();
 
-  const tempText = `温度：${weatherForecastToday.tempMin}°C~${weatherForecastToday.tempMax}°C，${weatherForecastToday.textDay}。`;
+  const tempText = `${weatherForecastToday.tempMin}°C~${weatherForecastToday.tempMax}°C，${weatherForecastToday.textDay}。`;
 
   const input: Input = {
     description: weatherForecastToday.textDay,
@@ -44,8 +44,7 @@ const getWeatherInfo = async (location: string) => {
   const clothing = cbw(input);
 
 
-
-  return { airCondition, airSuggestion, clothing, tempText };
+  return { airCondition, weather, airSuggestion, clothing, tempText };
 };
 
 interface ConstellationResponse {
@@ -56,53 +55,65 @@ const getConstellationInfo = async (consName: string, type: string): Promise<Con
   const juhe = new Juhe(JUHE_KEY);
   const today = await juhe.getConstellation(consName, type);
 
-  const score = `天秤座今日综合指数：${today.all}, 爱情指数：${today.love}, 财运指数：${today.money}, 工作指数：${today.work}。`;
+  const score = `天秤座综合指数：${today.all}, 爱情指数：${today.love}, 财运指数：${today.money}, 工作指数：${today.work}。`;
 
   return { score, summary: today.summary };
 };
 
+const getOotd = (clothing: any): string => {
+  const { upperbody, lowerbody, shoes, misc } = clothing;
+  const title = '今日份ootd推荐:\n';
+  const ootd = `上身：${upperbody}\n下身：${lowerbody}\n鞋子：${shoes}\n配饰：${misc || '随心'}`;
+  return title + ootd;
+};
+
 const main = async () => {
   const location = '北京';
-  const { airCondition, airSuggestion, clothing, tempText } = await getWeatherInfo(location);
+  const { airCondition, weather, airSuggestion, clothing, tempText } = await getWeatherInfo(location);
   const { score, summary } = await getConstellationInfo('天秤座', 'today');
+  console.log(score, summary);
 
-  const message: Template1 = {
-    name: {
-      value: 'Yuki',
+  const ootd = getOotd(clothing);
+
+  const dateMsg = dayjs().format('YYYY年MM月DD') + ' ' + parseDayOfWeek(dayjs().day());
+
+  const message: MessageTemplateAirCondition = {
+    first: {
+      value: `早上好呀 Yuki～\n今天是${dateMsg}\n你的${location}天气播报来咯~`,
     },
-    location: {
-      value: location,
-    },
-    date: {
-      value: dayjs().format('YYYY年MM月DD') + ' ' + parseDayOfWeek(dayjs().day()),
-    },
-    temp: {
+    keyword1: {
       value: tempText,
     },
-    aqi: {
-      value: `${airCondition.aqi} (${airCondition.category}) ${tempText}`,
+    keyword2: {
+      value: weather.humidity,
     },
-    suggestion: {
-      value: airSuggestion,
+    keyword3: {
+      value: airCondition.pm2p5,
     },
-    upperBody: {
-      value: clothing.upperbody.toString(),
+    keyword4: {
+      value: `${airCondition.aqi} (${airCondition.category})\n${airSuggestion}`,
     },
-    lowerBody: {
-      value: clothing.lowerbody,
+    remark: {
+      value: `\n${ootd} \n\n${score}`,
     },
-    shoes: {
-      value: clothing.shoes,
-    },
-    misc: {
-      value: clothing.misc.toString() == '' ? '无' : clothing.misc.toString(),
-    },
-    constellationScore: {
-      value: score,
-    },
-    constellationSummary: {
-      value: summary,
-    },
+    // upperBody: {
+    //   value: clothing.upperbody.toString(),
+    // },
+    // lowerBody: {
+    //   value: clothing.lowerbody,
+    // },
+    // shoes: {
+    //   value: clothing.shoes,
+    // },
+    // misc: {
+    //   value: clothing.misc.toString() == '' ? '无' : clothing.misc.toString(),
+    // },
+    // constellationScore: {
+    //   value: score,
+    // },
+    // constellationSummary: {
+    //   value: summary,
+    // },
     // temp: `今天${location}的温度是${weather.temp}°C，空气质量为 ${airCondition.aqi} (${airCondition.category})，可以穿${clothing.upperbody}`,
   };
 
@@ -110,8 +121,8 @@ const main = async () => {
   await messager.getAddressToken();
 
   messager.prepareMessage(message);
-  const templateId = 'QZJiGoJdONU9kuI425WVZTZu1jnaILYY_uscF5gO8cE';
-  const toUser = 'oCcIy58YxtyBZE1POm9awZ7tnrX4';
+  const templateId = 'PtcfMU9fncCsOQODjxvVCbcRjSHoT9uoEhsQ4lHnZgA';
+  const toUser = 'oxiA26q-oCvF4j149xR2ruQsTGKc';
   await messager.send(toUser, templateId);
 };
 

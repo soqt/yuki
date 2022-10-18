@@ -1,16 +1,11 @@
-export interface Template1 {
-  name: MessageOption
-  location: MessageOption,
-  temp: MessageOption,
-  date: MessageOption;
-  aqi: MessageOption;
-  suggestion: MessageOption;
-  upperBody: MessageOption;
-  lowerBody: MessageOption;
-  shoes: MessageOption;
-  misc: MessageOption;
-  constellationScore: MessageOption;
-  constellationSummary: MessageOption;
+export interface MessageTemplateAirCondition {
+  first: MessageOption
+  keyword1: MessageOption,
+  keyword2: MessageOption,
+  keyword3: MessageOption;
+  keyword4: MessageOption;
+  remark: MessageOption;
+
 }
 
 interface MessageOption {

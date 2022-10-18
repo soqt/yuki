@@ -2,11 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a4b819d2-bedd-49d9-be2c-d75112683331" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/juhe/Juhe.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.ts" beforeDir="false" afterPath="$PROJECT_DIR$/app.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/qWeather/QWeather.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/qWeather/QWeather.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.prod.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.prod.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/templates.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/templates.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -80,7 +78,8 @@
       <workItem from="1665480927957" duration="1516000" />
       <workItem from="1665483670079" duration="3982000" />
       <workItem from="1665568376144" duration="9831000" />
-      <workItem from="1665969903337" duration="4405000" />
+      <workItem from="1665969903337" duration="4444000" />
+      <workItem from="1666088126152" duration="2928000" />
     </task>
     <servers />
   </component>

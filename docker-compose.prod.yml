@@ -1,1 +1,35 @@
-version: '3.8'
+version: '3.9'
+
+services:
+  server:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      target: production
+    networks:
+      - frontend
+      - backend
+    environment:
+      - PORT=${PORT}
+    env_file:
+      - .env
+    volumes:
+      # this is a workaround to prevent host node_modules from accidently getting mounted in container
+      - notused:/home/node/app/node_modules
+    depends_on:
+      - redis
+    container_name: yuki_server
+
+  redis:
+    container_name: yuki_redis
+    networks:
+        - backend
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+
+volumes:
+  notused:

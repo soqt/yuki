@@ -16,13 +16,20 @@ dayjs.extend(timezone);
 dayjs.tz.setDefault('Asia/Shanghai');
 
 
-const { APP_ID, APP_SECRET, QWEATHER_KEY, JUHE_KEY } = process.env;
+const { NODE_ENV, APP_ID, APP_SECRET, QWEATHER_KEY, JUHE_KEY, WX_TEMPLATE_ID, WX_TO_USER } = process.env;
 
 if (!APP_ID || !APP_SECRET || !QWEATHER_KEY || !JUHE_KEY) {
   throw new Error('APP_ID or APP_SECRET is not defined');
 }
 
-const redis = new Redis();
+if (!WX_TEMPLATE_ID || !WX_TO_USER) {
+  throw new Error('WX_TEMPLATE_ID or WX_TO_USER is not defined');
+}
+
+const redis = new Redis({
+  host: NODE_ENV === 'production' ? 'yuki_redis' : 'localhost',
+  port: 6379,
+});
 
 const getWeatherInfo = async (location: string) => {
   const qWeather = new QWeather(QWEATHER_KEY);
@@ -94,35 +101,16 @@ const main = async () => {
       value: `${airCondition.aqi} (${airCondition.category})\n${airSuggestion}`,
     },
     remark: {
-      value: `\n${ootd} \n\n${score}`,
+      value: `${ootd} \n\n${score}`,
     },
-    // upperBody: {
-    //   value: clothing.upperbody.toString(),
-    // },
-    // lowerBody: {
-    //   value: clothing.lowerbody,
-    // },
-    // shoes: {
-    //   value: clothing.shoes,
-    // },
-    // misc: {
-    //   value: clothing.misc.toString() == '' ? '无' : clothing.misc.toString(),
-    // },
-    // constellationScore: {
-    //   value: score,
-    // },
-    // constellationSummary: {
-    //   value: summary,
-    // },
-    // temp: `今天${location}的温度是${weather.temp}°C，空气质量为 ${airCondition.aqi} (${airCondition.category})，可以穿${clothing.upperbody}`,
   };
 
   const messager = new WXMessager(APP_ID, APP_SECRET, redis);
   await messager.getAddressToken();
 
   messager.prepareMessage(message);
-  const templateId = 'PtcfMU9fncCsOQODjxvVCbcRjSHoT9uoEhsQ4lHnZgA';
-  const toUser = 'oxiA26q-oCvF4j149xR2ruQsTGKc';
+  const templateId = WX_TEMPLATE_ID;
+  const toUser = WX_TO_USER;
   await messager.send(toUser, templateId);
 };
 

@@ -42,10 +42,4 @@ COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY package.json pnpm-lock.yaml .npmrc ./
 
-COPY public ./dist/public
-
-# check every 30s to ensure this service returns HTTP 200
-COPY healthcheck.js .
-HEALTHCHECK --interval=30s CMD node healthcheck.js
-
 CMD [ "pnpm", "run", "start" ]

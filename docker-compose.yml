@@ -3,9 +3,7 @@ version: '3.9'
 services:
   redis:
     container_name: redis
-    image: bitnami/redis:7.0.5
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
+    image: redis:7.0.5-alpine
     volumes:
       - ./redis-db:/bitnami/redis/data
     ports:

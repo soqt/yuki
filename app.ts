@@ -16,10 +16,14 @@ dayjs.extend(timezone);
 dayjs.tz.setDefault('Asia/Shanghai');
 
 
-const { NODE_ENV, APP_ID, APP_SECRET, QWEATHER_KEY, JUHE_KEY, WX_TEMPLATE_ID, WX_TO_USER } = process.env;
+const { NODE_ENV, APP_ID, APP_SECRET, QWEATHER_KEY, JUHE_KEY, WX_TEMPLATE_ID, WX_TO_USER, LOCATION } = process.env;
 
 if (!APP_ID || !APP_SECRET || !QWEATHER_KEY || !JUHE_KEY) {
   throw new Error('APP_ID or APP_SECRET is not defined');
+}
+
+if (!LOCATION)  {
+  throw new Error('LOCATION is not defined');
 }
 
 if (!WX_TEMPLATE_ID || !WX_TO_USER) {
@@ -75,8 +79,7 @@ const getOotd = (clothing: any): string => {
 };
 
 const main = async () => {
-  const location = '北京';
-  const { airCondition, weather, airSuggestion, clothing, tempText } = await getWeatherInfo(location);
+  const { airCondition, weather, airSuggestion, clothing, tempText } = await getWeatherInfo(LOCATION);
   const { score, summary } = await getConstellationInfo('天秤座', 'today');
   console.log(score, summary);
 
@@ -86,7 +89,7 @@ const main = async () => {
 
   const message: MessageTemplateAirCondition = {
     first: {
-      value: `早上好呀 Yuki～\n今天是${dateMsg}\n你的${location}天气播报来咯~`,
+      value: `早上好呀 Yuki～\n今天是${dateMsg}\n你的${LOCATION}天气播报来咯~`,
     },
     keyword1: {
       value: tempText,

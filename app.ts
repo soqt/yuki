@@ -1,7 +1,6 @@
 import * as dotenv from 'dotenv';
 import Redis from 'ioredis';
-import dayjs from 'dayjs';
-import timezone from 'dayjs/plugin/timezone';
+import moment from 'moment-timezone';
 import { parseDayOfWeek } from './src/qWeather/days';
 import cbw from './src/clothing';
 import type { Input } from './src/clothing';
@@ -10,10 +9,6 @@ import QWeather from './src/qWeather/QWeather';
 import { MessageTemplateAirCondition } from './src/templates';
 import Juhe from './src/juhe/Juhe';
 dotenv.config();
-
-dayjs.locale('zh-cn');
-dayjs.extend(timezone);
-dayjs.tz.setDefault('Asia/Shanghai');
 
 
 const { NODE_ENV, APP_ID, APP_SECRET, QWEATHER_KEY, JUHE_KEY, WX_TEMPLATE_ID, WX_TO_USER, LOCATION } = process.env;
@@ -64,28 +59,31 @@ interface ConstellationResponse {
 }
 const getConstellationInfo = async (consName: string, type: string): Promise<ConstellationResponse> => {
   const juhe = new Juhe(JUHE_KEY);
-  const today = await juhe.getConstellation(consName, type);
+  const constellation = await juhe.getConstellation(consName, type);
 
-  const score = `天秤座综合指数：${today.all}, 爱情指数：${today.love}, 财运指数：${today.money}, 工作指数：${today.work}。`;
+  const score = `天秤座综合指数：${constellation.all}, 爱情指数：${constellation.love}, 财运指数：${constellation.money}, 工作指数：${constellation.work}。`;
 
-  return { score, summary: today.summary };
+  return { score, summary: constellation.summary };
 };
 
 const getOotd = (clothing: any): string => {
   const { upperbody, lowerbody, shoes, misc } = clothing;
   const title = '今日份ootd推荐:\n';
-  const ootd = `上身：${upperbody}\n下身：${lowerbody}\n鞋子：${shoes}\n配饰：${misc || '随心'}`;
+  const ootd = `上身：${upperbody}\n下身：${lowerbody}\n鞋子：${shoes}\n配饰：${misc.length > 0 ? misc : '随心'}`;
   return title + ootd;
 };
 
 const main = async () => {
+  const tz = moment(new Date()).tz('Asia/Shanghai');
+  const formatedToday = tz.format('YYYY年MM月DD日');
+  const week = tz.day();
+
+  const dateMsg = `${formatedToday} ${parseDayOfWeek(week)}`;
+
   const { airCondition, weather, airSuggestion, clothing, tempText } = await getWeatherInfo(LOCATION);
-  const { score, summary } = await getConstellationInfo('天秤座', 'today');
-  console.log(score, summary);
+  const { score } = await getConstellationInfo('天秤座', 'today');
 
   const ootd = getOotd(clothing);
-
-  const dateMsg = dayjs().format('YYYY年MM月DD') + ' ' + parseDayOfWeek(dayjs().day());
 
   const message: MessageTemplateAirCondition = {
     first: {

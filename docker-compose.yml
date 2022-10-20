@@ -2,7 +2,6 @@ version: '3.9'
 
 services:
   redis:
-    container_name: redis
     image: redis:7.0.5-alpine
     volumes:
       - ./redis-db:/bitnami/redis/data

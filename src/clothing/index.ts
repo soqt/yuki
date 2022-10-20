@@ -70,7 +70,7 @@ function lowerbody(temperature: number, windGust: number) {
   }
 }
 
-function misc(description: string, temperature: number, pop: number) {
+function misc(description: string, temperature: number, pop: number): string[] {
   const obj = [];
   if (temperature < 10) {
     obj.push(

@@ -15,7 +15,7 @@ services:
       - .env
     volumes:
       # this is a workaround to prevent host node_modules from accidently getting mounted in container
-      - notused:/home/node/app/node_modules
+      - notused:/usr/src/app/node_modules
     depends_on:
       - redis
     container_name: yuki_server

@@ -1,9 +1,7 @@
 import axios from 'axios';
-import Redis from 'ioredis';
 
 const WX_ACCESS_TOKEN_URL = 'https://api.weixin.qq.com/cgi-bin/token';
 const WX_SEND_MESSAGE_URL = 'https://api.weixin.qq.com/cgi-bin/message/template/send';
-
 
 
 class WXMessager {
@@ -15,15 +13,16 @@ class WXMessager {
 
   data?: object;
 
-  storage: Redis;
+  storage?: any;
 
-  constructor(appId: string, appSecret: string, storage: Redis) {
+  constructor(appId: string, appSecret: string) {
     this.appId = appId;
     this.appSecret = appSecret;
-    this.storage = storage;
   }
 
-  async getAddressToken(): Promise<string> {
+  // 获取微信Access Token并维护
+  // 用微信云时不需要
+  async getAccessToken(): Promise<string> {
     try {
       let accessToken = await this.storage.get('wx_access_token');
       if (!accessToken) {
@@ -41,7 +40,9 @@ class WXMessager {
           throw new Error(data.errmsg);
         }
         const { access_token: newAccessToken, expires_in: expiresIn } = data;
-        this.storage.set('wx_access_token', newAccessToken, 'EX', expiresIn);
+        if (this.storage) {
+          this.storage.set('wx_access_token', newAccessToken, 'EX', expiresIn);
+        }
         accessToken = newAccessToken;
       }
       this.accessToken = accessToken!;
@@ -57,14 +58,15 @@ class WXMessager {
 
   async send(toUser: string, templateId: string): Promise<string> {
     try {
-      await this.getAddressToken();
-      const url = `${WX_SEND_MESSAGE_URL}?access_token=${this.accessToken}`;
+      // await this.getAccessToken(); 用微信云时不需要
+      // const url = `${WX_SEND_MESSAGE_URL}?access_token=${this.accessToken}`;
 
+      console.log('before send');
       const { data } = await axios({
         method: 'POST',
-        url: url,
+        url: WX_SEND_MESSAGE_URL,
         data: {
-          access_token: this.accessToken,
+          // access_token: this.accessToken, 用微信云时不需要
           touser: toUser,
           template_id: templateId,
           data: this.data,

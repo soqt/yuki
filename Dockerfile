@@ -1,45 +1,27 @@
-FROM node:16-alpine3.15 AS base
+# 二开推荐阅读[如何提高项目构建效率](https://developers.weixin.qq.com/miniprogram/dev/wxcloudrun/src/scene/build/speed.html)
+FROM alpine:3.13
 
-## set our node environment, either development or production
-## defaults to production, compose overrides this to development on build and run
-#ARG NODE_ENV=production
-#ENV NODE_ENV $NODE_ENV
+# 容器默认时区为UTC，如需使用上海时间请启用以下时区设置命令
+# RUN apk add tzdata && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo Asia/Shanghai > /etc/timezone
 
-# default to port 3000 for node, and 9229 and 9230 (tests) for debug
-ARG PORT=3000
+# 使用 HTTPS 协议访问容器云调用证书安装
+RUN apk add ca-certificates
+
+# 安装依赖包，如需其他依赖包，请到alpine依赖包管理(https://pkgs.alpinelinux.org/packages?name=php8*imagick*&branch=v3.13)查找。
+# 选用国内镜像源以提高下载速度
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tencent.com/g' /etc/apk/repositories \
+&& apk add --update --no-cache nodejs npm
+
+
+ARG PORT=80
 ENV PORT $PORT
-EXPOSE $PORT 9229 9230
-
-# 安装Alphine必要apk包和NPM
-RUN apk add --no-cache python3 make g++ && rm -rf /var/cache/apk/*
-RUN apk add --no-cache git openssh
-RUN npm i npm@latest pnpm -g && npm install typescript -g
-
-
-FROM base AS builder
-
-RUN mkdir -p /usr/src/app && chown -R node:node /usr/src/
-WORKDIR /usr/src/app
-
-COPY package.json pnpm-lock.yaml .npmrc ./
-RUN pnpm install
-COPY . .
-
-RUN chown -R node /usr/src
-USER node
-
-RUN pnpm run build
-
-
-# ----- 生产环境 ----
-FROM base AS production
-
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
+EXPOSE $PORT
 
 WORKDIR /usr/src/app
-COPY --from=builder /usr/src/app/dist ./dist
-COPY --from=builder /usr/src/app/node_modules ./node_modules
-COPY package.json pnpm-lock.yaml .npmrc ./
+COPY package*.json ./
 
-CMD [ "pnpm", "run", "start" ]
+RUN npm config set registry https://mirrors.cloud.tencent.com/npm/
+RUN npm install --only=production
+COPY ./dist ./dist
+#COPY .env .
+CMD [ "npm", "run", "start" ]

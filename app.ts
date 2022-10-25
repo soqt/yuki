@@ -1,121 +1,41 @@
-import * as dotenv from 'dotenv';
-import Redis from 'ioredis';
-import moment from 'moment-timezone';
-import { parseDayOfWeek } from './src/qWeather/days';
-import cbw from './src/clothing';
-import type { Input } from './src/clothing';
-import WXMessager from './src/WXMessager';
-import QWeather from './src/qWeather/QWeather';
-import { MessageTemplateAirCondition } from './src/templates';
-import Juhe from './src/juhe/Juhe';
+import dotenv from 'dotenv';
+import express, { Express, Request, Response, NextFunction } from 'express';
+import createError, { HttpError } from 'http-errors';
+import path from 'path';
+import logger from 'morgan';
+import cors from 'cors';
+import apiRouter from './src/routes/api';
+// import { connectToRedis } from './src/redis';
 dotenv.config();
 
+// connectToRedis();
 
-const { NODE_ENV, APP_ID, APP_SECRET, QWEATHER_KEY, JUHE_KEY, WX_TEMPLATE_ID, WX_TO_USER, LOCATION } = process.env;
+const app: Express = express();
 
-if (!APP_ID || !APP_SECRET || !QWEATHER_KEY || !JUHE_KEY) {
-  throw new Error('APP_ID or APP_SECRET is not defined');
-}
+app.use(logger('dev'));
+app.use(express.json());
+app.use(cors());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.static(path.join(__dirname, 'public')));
 
-if (!LOCATION)  {
-  throw new Error('LOCATION is not defined');
-}
 
-if (!WX_TEMPLATE_ID || !WX_TO_USER) {
-  throw new Error('WX_TEMPLATE_ID or WX_TO_USER is not defined');
-}
+app.use('/api', apiRouter);
 
-const redis = new Redis({
-  host: NODE_ENV === 'production' ? 'yuki_redis' : 'localhost',
-  port: 6379,
+
+// catch 404 and forward to error handler
+app.use(function (req, res, next) {
+  next(createError(404));
 });
 
-const getWeatherInfo = async (location: string) => {
-  const qWeather = new QWeather(QWEATHER_KEY);
-  const cityCode = await qWeather.getCityCode(location);
+// error handler
+app.use(function (err: HttpError, req: Request, res: Response, next: NextFunction) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+  // render the error page
+  console.log(res.locals.message);
+  res.statusMessage = err.message;
+  res.status(err.status || 500).json( { errorMessage: err.message, status: err.status });
+});
 
-  const airCondition = await qWeather.getAirNow(cityCode);
-  const weather = await qWeather.getWeatherNow(cityCode);
-  const weatherForecastToday = await qWeather.getWeatherForecast(cityCode);
-  const airSuggestion = qWeather.getAqiSuggestion();
-
-  const tempText = `${weatherForecastToday.tempMin}°C~${weatherForecastToday.tempMax}°C，${weatherForecastToday.textDay}。`;
-
-  const input: Input = {
-    description: weatherForecastToday.textDay,
-    pop: parseFloat(weatherForecastToday.precip),
-    temperature: parseInt(weather.temp),
-    windGust: parseInt(weather.windScale),
-  };
-  const clothing = cbw(input);
-
-
-  return { airCondition, weather, airSuggestion, clothing, tempText };
-};
-
-interface ConstellationResponse {
-  score: string,
-  summary: string
-}
-const getConstellationInfo = async (consName: string, type: string): Promise<ConstellationResponse> => {
-  const juhe = new Juhe(JUHE_KEY);
-  const constellation = await juhe.getConstellation(consName, type);
-
-  const score = `天秤座综合指数：${constellation.all}, 爱情指数：${constellation.love}, 财运指数：${constellation.money}, 工作指数：${constellation.work}。`;
-
-  return { score, summary: constellation.summary };
-};
-
-const getOotd = (clothing: any): string => {
-  const { upperbody, lowerbody, shoes, misc } = clothing;
-  const title = '今日份ootd推荐:\n';
-  const ootd = `上身：${upperbody}\n下身：${lowerbody}\n鞋子：${shoes}\n配饰：${misc.length > 0 ? misc : '随心'}`;
-  return title + ootd;
-};
-
-const main = async () => {
-  const tz = moment(new Date()).tz('Asia/Shanghai');
-  const formatedToday = tz.format('YYYY年MM月DD日');
-  const week = tz.day();
-
-  const dateMsg = `${formatedToday} ${parseDayOfWeek(week)}`;
-
-  const { airCondition, weather, airSuggestion, clothing, tempText } = await getWeatherInfo(LOCATION);
-  const { score } = await getConstellationInfo('天秤座', 'today');
-
-  const ootd = getOotd(clothing);
-
-  const message: MessageTemplateAirCondition = {
-    first: {
-      value: `早上好呀 Yuki～\n今天是${dateMsg}\n你的${LOCATION}天气播报来咯~`,
-    },
-    keyword1: {
-      value: tempText,
-    },
-    keyword2: {
-      value: weather.humidity,
-    },
-    keyword3: {
-      value: airCondition.pm2p5,
-    },
-    keyword4: {
-      value: `${airCondition.aqi} (${airCondition.category})\n${airSuggestion}`,
-    },
-    remark: {
-      value: `${ootd} \n\n${score}`,
-    },
-  };
-
-  const messager = new WXMessager(APP_ID, APP_SECRET, redis);
-  await messager.getAddressToken();
-
-  messager.prepareMessage(message);
-  const templateId = WX_TEMPLATE_ID;
-  const toUser = WX_TO_USER;
-  await messager.send(toUser, templateId);
-};
-
-main().then(() => {
-  console.log('Done');
-  redis.disconnect();
-}).catch((err) => {throw err;});
+export default app;

@@ -102,6 +102,8 @@ const sendGm = async (location: string, openid: string) => {
       },
     };
 
+    console.log(message);
+
     const messager = new WXMessager(APP_ID, APP_SECRET);
     // await messager.getAddressToken();
     messager.prepareMessage(message);

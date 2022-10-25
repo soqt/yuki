@@ -61,7 +61,6 @@ class WXMessager {
       // await this.getAccessToken(); 用微信云时不需要
       // const url = `${WX_SEND_MESSAGE_URL}?access_token=${this.accessToken}`;
 
-      console.log('before send');
       const { data } = await axios({
         method: 'POST',
         url: WX_SEND_MESSAGE_URL,

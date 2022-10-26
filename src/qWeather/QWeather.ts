@@ -77,8 +77,9 @@ class QWeather {
           lang: 'zh',
         },
       });
-      this.aqiCategory = data.aqiCategory;
-      return (data as AirNowResponse).now;
+      const airNow = (data as AirNowResponse).now;
+      this.aqiCategory = airNow.category;
+      return airNow;
     } catch (e) {
       throw e;
     }

@@ -11,6 +11,8 @@ class QWeather {
 
   aqiCategory?: string;
 
+  humidity?: number;
+
   constructor(apiKey: string) {
     this.apiKey = apiKey; 
   }
@@ -46,7 +48,10 @@ class QWeather {
       throw new Error('Cannot get weather');
     }
 
-    return (data as WeatherNowResponse).now;
+    const weatherNow = (data as WeatherNowResponse).now;
+    this.humidity = parseInt(weatherNow.humidity);
+
+    return weatherNow;
   }
 
   async getWeatherForecast(location: string): Promise<WeatherDaily> {
@@ -101,6 +106,19 @@ class QWeather {
         return '不适合外出，尽量呆在家里吧！';
       default:
         return '空气质量令人满意，基本无空气污染';
+    }
+  }
+
+  getHumiditySuggestion() {
+    if (!this.humidity) {
+      return '';
+    }
+    if (this.humidity < 30) {
+      return '空气干燥，注意补充水分哦';
+    } else if (this.humidity > 70) {
+      return '空气湿润，注意防潮～';
+    } else {
+      return '空气适宜，但是也要注意防晒呀';
     }
   }
 }

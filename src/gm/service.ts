@@ -29,6 +29,7 @@ const getWeatherInfo = async (location: string) => {
   const weather = await qWeather.getWeatherNow(cityCode);
   const weatherForecastToday = await qWeather.getWeatherForecast(cityCode);
   const airSuggestion = qWeather.getAqiSuggestion();
+  const humiditySuggestions = qWeather.getHumiditySuggestion();
 
   const tempText = `${weatherForecastToday.tempMin}°C~${weatherForecastToday.tempMax}°C，${weatherForecastToday.textDay}。`;
 
@@ -41,7 +42,7 @@ const getWeatherInfo = async (location: string) => {
   const clothing = cbw(input);
 
 
-  return { airCondition, weather, airSuggestion, clothing, tempText };
+  return { airCondition, weather, airSuggestion, humiditySuggestions, clothing, tempText };
 };
 
 interface ConstellationResponse {
@@ -76,7 +77,7 @@ const sendGm = async (location: string, openid: string) => {
   const date = getDate();
 
   try {
-    const { airCondition, weather, airSuggestion, clothing, tempText } = await getWeatherInfo(location);
+    const { airCondition, weather, airSuggestion, humiditySuggestions, clothing, tempText } = await getWeatherInfo(location);
     const { score } = await getConstellationInfo('天秤座', 'today');
     
     const ootd = getOotd(clothing);
@@ -89,7 +90,7 @@ const sendGm = async (location: string, openid: string) => {
         value: tempText,
       },
       keyword2: {
-        value: weather.humidity,
+        value: `${weather.humidity}%\n${humiditySuggestions}`,
       },
       keyword3: {
         value: airCondition.pm2p5,

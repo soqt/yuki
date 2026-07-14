@@ -5,6 +5,7 @@ import path from 'path';
 import logger from 'morgan';
 import cors from 'cors';
 import apiRouter from './src/routes/api';
+import wechatRouter from './src/routes/wechat';
 // import { connectToRedis } from './src/redis';
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 app.use('/api', apiRouter);
+app.use('/wechat', wechatRouter);
 
 app.use('/healthz', function (req, res) {
   res.send('ok');
